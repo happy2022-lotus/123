@@ -459,23 +459,75 @@
     </style>
 </head>
 <body>
-        <!-- 🔑 로그인/로그아웃 버튼 UI (공유 게시판 위 등 원하는 위치에 추가) -->
-    <div id="auth-buttons" style="text-align:right; margin: 10px;">
-      <button id="login-btn" onclick="signInWithGoogle()">구글 로그인</button>
-      <button id="logout-btn" onclick="signOut()" style="display:none;">로그아웃</button>
-      <span id="user-info" style="margin-left:10px; color:#1976d2;"></span>
-    </div>
 
     <div class="game-container">
         <div class="header">
             <h1>🕵️ Who Threw a Cake at the Monalisa? 🎂</h1>
             <div class="stage-indicator">
-                목격자 <span id="current-stage">1</span> / 4
+                목격자 <span id="current-stage">1</span> / 5
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill" style="width: 25%"></div>
             </div>
         </div>
+
+<div id="auth-buttons" style="
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    position: absolute; 
+    top: 24px; 
+    right: 32px;
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 7px 16px 7px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    font-family: 'Noto Sans KR', sans-serif;
+    z-index: 1;
+">
+  <span id="user-info" style="
+      color: #1976d2; 
+      font-weight: 600;
+      font-size: 1em;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+      transition: color 0.2s;">
+  </span>
+  <button id="login-btn" onclick="signInWithGoogle()" style="
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 16px;
+    font-size: 0.97em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(40,167,69,0.12);
+    transition: background 0.2s, transform 0.2s;
+    outline: none;
+    font-family: inherit;
+  " onmouseover="this.style.background='linear-gradient(45deg,#20c997,#28a745)'" onmouseout="this.style.background='linear-gradient(45deg, #28a745, #20c997)'">
+    구글 로그인
+  </button>
+  <button id="logout-btn" onclick="signOut()" style="
+    display:none;
+    background: linear-gradient(45deg, #ff6b6b, #ffa500);
+    color: white;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 16px;
+    font-size: 0.97em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,107,107,0.11);
+    transition: background 0.2s, transform 0.2s;
+    outline: none;
+    font-family: inherit;
+  " onmouseover="this.style.background='linear-gradient(45deg,#ffa500,#ff6b6b)'" onmouseout="this.style.background='linear-gradient(45deg, #ff6b6b, #ffa500)'">
+    로그아웃
+  </button>
+</div>
         
         <div class="content">
             <!-- Introduction Stage -->
@@ -818,18 +870,14 @@
                     
                     <div class="student-response sample">
                         <div class="student-name">👤 Student A <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">샘플</span></div>
-                        <div class="student-answer">"Larry Johnson is the criminal because he has blue eyes and speaks only English. His height (173cm) is a little taller than Ann (170cm). He also has long brown hair which matches Carlos's testimony."</div>
+                        <div class="student-answer">"Andres Lozano is the criminal because he has brown eyes and speaks Spanish and English. His height (176cm) is a little taller than Ann (170cm). He also has long black hair."</div>
                     </div>
                     
                     <div class="student-response sample">
                         <div class="student-name">👤 Student B <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">샘플</span></div>
-                        <div class="student-answer">"I think it's Larry Johnson. The evidence shows: blue eyes (Camila saw), English only (couldn't understand Spanish), brown hair (Carlos found the wig), and he's taller than Ann but not too tall."</div>
+                        <div class="student-answer">"I think it's Tim Baker. The evidence shows: green eyes (Camila saw), English only (couldn't understand Spanish), brown hair (Carlos found the wig), and he's taller than Ann."</div>
                     </div>
-                    
-                    <div class="student-response sample">
-                        <div class="student-name">👤 Student C <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">샘플</span></div>
-                        <div class="student-answer">"Larry Johnson is guilty! He bought the smallest cake because it was easier to throw and hide. All the witness descriptions match him perfectly."</div>
-                    </div>
+
                     
                     <div id="new-responses"></div>
                     
@@ -853,7 +901,7 @@
                 <div class="score-display">
                     <h3>📊 최종 점수</h3>
                     <p style="font-size: 1.5em; color: #28a745; font-weight: bold;">
-                        <span id="final-score">0</span> / 13 문제 정답
+                        <span id="final-score">0</span> / 14 문제 정답
                     </p>
                     <p style="margin-top: 10px; color: #6c757d;">
                         정답률: <span id="accuracy">0</span>%
