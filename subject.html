@@ -1,586 +1,1409 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mystery Game: Who Threw a Cake at the Monalisa?</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Firebase SDK (ESM) + Auth -->
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBFq-99bZSsy3h1qNy7irJZe7Z0OpZ9s4k",
-    authDomain: "st-grade-9e67f.firebaseapp.com",
-    projectId: "st-grade-9e67f",
-    storageBucket: "st-grade-9e67f.firebasestorage.app",
-    messagingSenderId: "481985157615",
-    appId: "1:481985157615:web:a40a8623938815ad283e1a",
-    measurementId: "G-GN02CWDQ91"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
-        // Auth: anonymous sign-in
-        const auth = getAuth(app);
-        window.firebaseAuth = auth;
-        window.firebaseUser = null;
-        signInAnonymously(auth).catch(e => console.error('Anonymous sign-in failed:', e));
-        onAuthStateChanged(auth, (user) => {
-          window.firebaseUser = user || null;
-          const el = document.getElementById('firebaseStatus');
-          if (user && el) {
-            el.textContent = `🟢 Connected (UID: ${user.uid.slice(0,6)}…)`;
-            el.classList.remove('firebase-disconnected');
-            el.classList.add('firebase-connected');
-          }
-          if (user && typeof initializeFirebase === 'function' && !window.__initOnce) {
-            window.__initOnce = true;
-            initializeFirebase();
-          }
-        });
-
-        // Expose Firebase helpers globally for non-module scripts
-        window.firebaseDB = database;
-        window.firebaseRef = ref;
-        window.firebasePush = push;
-        window.firebaseOnValue = onValue;
-        window.firebaseSet = set;
-    </script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모나리사 케이크 사건 - 영어 독해 방탈출 게임</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .progress-bar { transition: width 0.5s ease; }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
-        .canvas-container { border: 3px solid #e5e7eb; border-radius: 12px; background: white; }
-        .color-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; cursor: pointer; transition: transform 0.2s; }
-        .color-btn:hover { transform: scale(1.1); }
-        .color-btn.active { border-color: #374151; transform: scale(1.2); }
-        .clue-item { transition: all 0.3s ease; cursor: pointer; }
-        .clue-item:hover { background: #f3f4f6; transform: translateX(5px); }
-        .suspect-card { transition: all 0.3s ease; cursor: pointer; }
-        .suspect-card:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-        .suspect-card.selected { border-color: #10b981; background: #ecfdf5; }
-        .firebase-status { position: fixed; top: 20px; right: 20px; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; z-index: 1000; }
-        .firebase-connected { background: #10b981; color: white; }
-        .firebase-disconnected { background: #ef4444; color: white; }
-        .new-share-notification { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .stage-indicator {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0 0 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: white;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .stage {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .stage.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .story-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #ff6b6b;
+        }
+        
+        .english-text {
+            background: #e8f5e8;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #28a745;
+            font-family: 'Georgia', serif;
+            line-height: 1.8;
+        }
+        
+        .witness-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        
+        .witness-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .witness-name {
+            font-weight: 700;
+            color: #495057;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .witness-role {
+            color: #6c757d;
+            font-style: italic;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .question-section {
+            background: #e3f2fd;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+        
+        .question {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .question-number {
+            background: #1976d2;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .answer-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .answer-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        
+        .submit-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(40,167,69,0.3);
+        }
+        
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .vocabulary {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .vocabulary h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .vocab-words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .vocab-word {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #495057;
+            border: 1px solid #ffeaa7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .vocab-word:hover {
+            background: #ffeaa7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .highlighted {
+            background-color: #ffeb3b !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            animation: highlight-pulse 1s ease-in-out;
+        }
+        
+        @keyframes highlight-pulse {
+            0% { background-color: #ffeb3b; }
+            50% { background-color: #ffc107; }
+            100% { background-color: #ffeb3b; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .final-stage {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .final-stage h2 {
+            color: #28a745;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        .celebration {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+        
+        .score-display {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .questions-container {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .suspects-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .suspect-card {
+            background: white;
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .suspect-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #007bff;
+        }
+        
+        .suspect-card.selected {
+            border-color: #28a745;
+            background: #f8fff8;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(40,167,69,0.2);
+        }
+        
+        .suspect-name {
+            font-weight: 700;
+            font-size: 1.2em;
+            color: #495057;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .suspect-info p {
+            margin: 8px 0;
+            color: #6c757d;
+            font-size: 0.95em;
+        }
+        
+        .suspect-info strong {
+            color: #495057;
+        }
+        
+        .selected-suspect {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #155724;
+            font-weight: 600;
+        }
+        
+        .sharing-board {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 5px solid #17a2b8;
+        }
+        
+        .sharing-board h3 {
+            color: #17a2b8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .student-response {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .student-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .student-answer {
+            color: #6c757d;
+            line-height: 1.6;
+            font-style: italic;
+        }
+        
+        .share-input {
+            background: white;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 12px 15px;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .share-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .share-btn:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .witness-card {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
-<body class="gradient-bg min-h-screen">
-    <!-- Firebase Connection Status -->
-    <div id="firebaseStatus" class="firebase-status firebase-disconnected">🔴 Connecting to Firebase (Anonymous)…</div>
-
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="text-center mb-8 fade-in">
-            <h1 class="text-4xl font-bold text-white mb-4">🎨 Mystery at the Museum</h1>
-            <p class="text-xl text-white/90">Who Threw a Cake at the Monalisa?</p>
-            <div class="mt-6 bg-white/20 rounded-full h-3 max-w-md mx-auto">
-                <div id="progressBar" class="progress-bar bg-white rounded-full h-3" style="width: 0%"></div>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🕵️ Who Threw a Cake at the Monalisa? 🎂</h1>
+            <div class="stage-indicator">
+                목격자 <span id="current-stage">1</span> / 4
             </div>
-            <p class="text-white/80 mt-2">Progress: <span id="progressText">0/7</span> sections completed</p>
-        </div>
-
-        <!-- Navigation -->
-        <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button onclick="showSection('story')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">📖 Story</button>
-            <button onclick="showSection('vocabulary')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">📚 Vocabulary</button>
-            <button onclick="showSection('questions')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">❓ Questions</button>
-            <button onclick="showSection('grammar')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">📝 Grammar</button>
-            <button onclick="showSection('clues')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">🔍 Clues</button>
-            <button onclick="showSection('sketch')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">🎨 Sketch</button>
-            <button onclick="showSection('solve')" class="nav-btn bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all">🕵️ Solve</button>
-        </div>
-
-        <!-- ===== Story Section ===== -->
-        <div id="storySection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">📖 The Mystery Story</h2>
-            <div class="space-y-6">
-                <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
-                    <h3 class="font-semibold text-lg mb-3">🏛️ The Crime Scene</h3>
-                    <p class="text-gray-700 leading-relaxed">Last Saturday, someone threw a cake at the Monalisa in the Botero Museum in Bogota, Colombia. There were four eyewitnesses. What did they say? Read the following, and find the criminal.</p>
-                </div>
-                <div class="bg-green-50 p-6 rounded-xl border-l-4 border-green-500">
-                    <h3 class="font-semibold text-lg mb-3">👩 Ann Jones, a visitor</h3>
-                    <p class="text-gray-700 leading-relaxed">I was looking at the Monalisa, and someone threw a cake at the painting. I turned around and saw an old man. He was standing in front of a wheelchair. I'm about 170 cm tall, and he was a little taller than me.</p>
-                    <div class="mt-4 bg-white p-4 rounded-lg border border-green-300">
-                        <label class="block text-sm font-medium text-green-700 mb-2">✍️ Write a clue from Ann's testimony:</label>
-                        <input type="text" id="annClue" class="w-full p-2 border border-green-300 rounded focus:ring-2 focus:ring-green-500" placeholder="예: The suspect was taller than 170cm..." />
-                        <button onclick="addWitnessClue('annClue','Ann')" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">Add Clue</button>
-                    </div>
-                </div>
-                <div class="bg-yellow-50 p-6 rounded-xl border-l-4 border-yellow-500">
-                    <h3 class="font-semibold text-lg mb-3">🧹 Carlos Diaz, a janitor</h3>
-                    <p class="text-gray-700 leading-relaxed">An old man with gray hair was running away, and something fell off his head. It was his wig. I ran after him, but I couldn't catch him. He was faster than me. In fact, the old man was not old. He was a young man with long brown hair.</p>
-                    <div class="mt-4 bg-white p-4 rounded-lg border border-yellow-300">
-                        <label class="block text-sm font-medium text-yellow-700 mb-2">✍️ Write a clue from Carlos's testimony:</label>
-                        <input type="text" id="carlosClue" class="w-full p-2 border border-yellow-300 rounded focus:ring-2 focus:ring-yellow-500" placeholder="예: The suspect wore a gray wig..." />
-                        <button onclick="addWitnessClue('carlosClue','Carlos')" class="mt-2 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm">Add Clue</button>
-                    </div>
-                </div>
-                <div class="bg-purple-50 p-6 rounded-xl border-l-4 border-purple-500">
-                    <h3 class="font-semibold text-lg mb-3">🛡️ Diego Perez, a guard</h3>
-                    <p class="text-gray-700 leading-relaxed">I went to the crime scene, and there were pieces of cake all over the painting. There was also a wheelchair near the painting, and I found a cake box next to the wheelchair. The box was from Camila's Bakery.</p>
-                    <div class="mt-4 bg-white p-4 rounded-lg border border-purple-300">
-                        <label class="block text-sm font-medium text-purple-700 mb-2">✍️ Write a clue from Diego's testimony:</label>
-                        <input type="text" id="diegoClue" class="w-full p-2 border border-purple-300 rounded focus:ring-2 focus:ring-purple-500" placeholder="예: Found a cake box from Camila's Bakery..." />
-                        <button onclick="addWitnessClue('diegoClue','Diego')" class="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm">Add Clue</button>
-                    </div>
-                </div>
-                <div class="bg-pink-50 p-6 rounded-xl border-l-4 border-pink-500">
-                    <h3 class="font-semibold text-lg mb-3">🧁 Camila Santos, the owner of Camila's Bakery</h3>
-                    <p class="text-gray-700 leading-relaxed">Last Friday, a young man came in. I spoke to him in Spanish, but he didn't understand me. He spoke only English. We had a lot of different cakes, but he just wanted the smallest one. We sold only one cake that day, so I remember him clearly. Oh, he had blue eyes.</p>
-                    <div class="mt-4 bg-white p-4 rounded-lg border border-pink-300">
-                        <label class="block text-sm font-medium text-pink-700 mb-2">✍️ Write a clue from Camila's testimony:</label>
-                        <input type="text" id="camilaClue" class="w-full p-2 border border-pink-300 rounded focus:ring-2 focus:ring-pink-500" placeholder="예: The customer had blue eyes and spoke only English..." />
-                        <button onclick="addWitnessClue('camilaClue','Camila')" class="mt-2 bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded text-sm">Add Clue</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Student Clue Writing Section -->
-            <div class="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-indigo-200">
-                <h3 class="text-xl font-bold text-indigo-800 mb-4">✍️ Additional Clues</h3>
-                <p class="text-indigo-700 mb-4">Write any other important clues you noticed:</p>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-indigo-700 mb-2">Other important clue:</label>
-                        <input type="text" id="studentClue4" class="w-full p-3 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="Write any other clue you found..." />
-                        <button onclick="addStudentClue('studentClue4')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">Add to My Clues</button>
-                    </div>
-                </div>
-                <div class="mt-4 p-4 bg-white rounded-lg border border-indigo-200">
-                    <h4 class="font-semibold text-indigo-800 mb-2">📝 All My Written Clues:</h4>
-                    <div id="studentCluesList" class="space-y-2">
-                        <p class="text-gray-500 italic">Your clues will appear here and in the Clues section...</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="completeSection('story')" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-all">✅ Mark as Read</button>
-        </div>
-
-        <!-- ===== Vocabulary Section ===== -->
-        <div id="vocabularySection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8 hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">📚 Vocabulary Learning</h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- 12 cards provided (you can add 4 more later to make 16) -->
-                <!-- bakery -->
-                <div class="vocab-card bg-gradient-to-br from-blue-100 to-blue-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-blue-800">bakery</h3><p class="text-blue-600 mt-2 text-sm">n.</p><p class="text-blue-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-blue-800">빵집</h3><p class="text-blue-700 mt-2 text-sm">n.</p><hr class="my-2 border-blue-300" /><p class="text-sm text-blue-700">예문(영): The bakery is famous for its cheesecakes.</p><p class="text-sm text-blue-600 mt-1">예문(한): 그 빵집은 치즈케이크로 유명하다.</p></div>
-                </div>
-                <!-- crime -->
-                <div class="vocab-card bg-gradient-to-br from-green-100 to-green-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-green-800">crime</h3><p class="text-green-600 mt-2 text-sm">n.</p><p class="text-green-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-green-800">범죄</h3><p class="text-green-700 mt-2 text-sm">n.</p><hr class="my-2 border-green-300" /><p class="text-sm text-green-700">예문(영): Writing on walls can be a crime.</p><p class="text-sm text-green-600 mt-1">예문(한): 벽에 낙서하는 것은 범죄가 될 수 있다.</p></div>
-                </div>
-                <!-- criminal -->
-                <div class="vocab-card bg-gradient-to-br from-purple-100 to-purple-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-purple-800">criminal</h3><p class="text-purple-600 mt-2 text-sm">n.</p><p class="text-purple-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-purple-800">범죄자</h3><p class="text-purple-700 mt-2 text-sm">n.</p><hr class="my-2 border-purple-300" /><p class="text-sm text-purple-700">예문(영): The police caught the criminal this morning.</p><p class="text-sm text-purple-600 mt-1">예문(한): 경찰은 오늘 아침 그 범죄자를 붙잡았다.</p></div>
-                </div>
-                <!-- eyewitness -->
-                <div class="vocab-card bg-gradient-to-br from-yellow-100 to-yellow-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-yellow-800">eyewitness</h3><p class="text-yellow-600 mt-2 text-sm">n.</p><p class="text-yellow-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-yellow-800">목격자</h3><p class="text-yellow-700 mt-2 text-sm">n.</p><hr class="my-2 border-yellow-300" /><p class="text-sm text-yellow-700">예문(영): We are looking for eyewitnesses of the accident.</p><p class="text-sm text-yellow-600 mt-1">예문(한): 우리는 그 사고의 목격자를 찾고 있다.</p></div>
-                </div>
-                <!-- fall off -->
-                <div class="vocab-card bg-gradient-to-br from-red-100 to-red-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-red-800">fall off</h3><p class="text-red-600 mt-2 text-sm">v.</p><p class="text-red-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-red-800">떨어지다</h3><p class="text-red-700 mt-2 text-sm">v.</p><hr class="my-2 border-red-300" /><p class="text-sm text-red-700">예문(영): He fell off the stairs and broke his leg.</p><p class="text-sm text-red-600 mt-1">예문(한): 그는 계단에서 떨어져 다리를 다쳤다.</p></div>
-                </div>
-                <!-- guard -->
-                <div class="vocab-card bg-gradient-to-br from-indigo-100 to-indigo-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-indigo-800">guard</h3><p class="text-indigo-600 mt-2 text-sm">n.</p><p class="text-indigo-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-indigo-800">경비원</h3><p class="text-indigo-700 mt-2 text-sm">n.</p><hr class="my-2 border-indigo-300" /><p class="text-sm text-indigo-700">예문(영): There are guards at the entrance of the palace.</p><p class="text-sm text-indigo-600 mt-1">예문(한): 궁 입구에는 경비원이 있다.</p></div>
-                </div>
-                <!-- height -->
-                <div class="vocab-card bg-gradient-to-br from-pink-100 to-pink-200 p-6 card-hover rounded-xl cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-pink-800">height</h3><p class="text-pink-600 mt-2 text-sm">n.</p><p class="text-pink-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-pink-800">키</h3><p class="text-pink-700 mt-2 text-sm">n.</p><hr class="my-2 border-pink-300" /><p class="text-sm text-pink-700">예문(영): Yuna is the same height as me.</p><p class="text-sm text-pink-600 mt-1">예문(한): 유나는 나와 키가 같다.</p></div>
-                </div>
-                <!-- janitor -->
-                <div class="vocab-card bg-gradient-to-br from-teal-100 to-teal-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-teal-800">janitor</h3><p class="text-teal-600 mt-2 text-sm">n.</p><p class="text-teal-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-teal-800">청소부, 관리인</h3><p class="text-teal-700 mt-2 text-sm">n.</p><hr class="my-2 border-teal-300" /><p class="text-sm text-teal-700">예문(영): The school janitor fixed the broken chair for me.</p><p class="text-sm text-teal-600 mt-1">예문(한): 학교 관리인께서 고장 난 의자를 고쳐 주셨다.</p></div>
-                </div>
-                <!-- language -->
-                <div class="vocab-card bg-gradient-to-br from-orange-100 to-orange-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-orange-800">language</h3><p class="text-orange-600 mt-2 text-sm">n.</p><p class="text-orange-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-orange-800">언어</h3><p class="text-orange-700 mt-2 text-sm">n.</p><hr class="my-2 border-orange-300" /><p class="text-sm text-orange-700">예문(영): Lily can speak five languages.</p><p class="text-sm text-orange-600 mt-1">예문(한): 릴리는 다섯 개 언어를 말할 수 있다.</p></div>
-                </div>
-                <!-- owner -->
-                <div class="vocab-card bg-gradient-to-br from-cyan-100 to-cyan-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-cyan-800">owner</h3><p class="text-cyan-600 mt-2 text-sm">n.</p><p class="text-cyan-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-cyan-800">주인</h3><p class="text-cyan-700 mt-2 text-sm">n.</p><hr class="my-2 border-cyan-300" /><p class="text-sm text-cyan-700">예문(영): Who is the owner of this laptop?</p><p class="text-sm text-cyan-600 mt-1">예문(한): 이 노트북의 주인은 누구인가?</p></div>
-                </div>
-                <!-- piece -->
-                <div class="vocab-card bg-gradient-to-br from-lime-100 to-lime-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-lime-800">piece</h3><p class="text-lime-600 mt-2 text-sm">n.</p><p class="text-lime-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-lime-800">조각</h3><p class="text-lime-700 mt-2 text-sm">n.</p><hr class="my-2 border-lime-300" /><p class="text-sm text-lime-700">예문(영): She cut her finger on a piece of glass.</p><p class="text-sm text-lime-600 mt-1">예문(한): 그녀는 유리 조각에 손가락을 베였다.</p></div>
-                </div>
-                <!-- run away -->
-                <div class="vocab-card bg-gradient-to-br from-violet-100 to-violet-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-violet-800">run away</h3><p class="text-violet-600 mt-2 text-sm">v.</p><p class="text-violet-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-violet-800">도망치다</h3><p class="text-violet-700 mt-2 text-sm">v.</p><hr class="my-2 border-violet-300" /><p class="text-sm text-violet-700">예문(영): My dog often runs away with my sock.</p><p class="text-sm text-violet-600 mt-1">예문(한): 우리 강아지는 자주 내 양말을 물고 도망간다.</p></div>
-                </div>
-                <!-- scene -->
-                <div class="vocab-card bg-gradient-to-br from-emerald-100 to-emerald-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-emerald-800">scene</h3><p class="text-emerald-600 mt-2 text-sm">n.</p><p class="text-emerald-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-emerald-800">현장, 장면</h3><p class="text-emerald-700 mt-2 text-sm">n.</p><hr class="my-2 border-emerald-300" /><p class="text-sm text-emerald-700">예문(영): The accident scene was near the bank.</p><p class="text-sm text-emerald-600 mt-1">예문(한): 사고 현장은 은행 근처였다.</p></div>
-                </div>
-                <!-- suspect -->
-                <div class="vocab-card bg-gradient-to-br from-rose-100 to-rose-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-rose-800">suspect</h3><p class="text-rose-600 mt-2 text-sm">n.</p><p class="text-rose-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-rose-800">용의자</h3><p class="text-rose-700 mt-2 text-sm">n.</p><hr class="my-2 border-rose-300" /><p class="text-sm text-rose-700">예문(영): The suspect has brown hair and blue eyes.</p><p class="text-sm text-rose-600 mt-1">예문(한): 그 용의자는 갈색 머리에 푸른 눈을 가졌다.</p></div>
-                </div>
-                <!-- wheelchair -->
-                <div class="vocab-card bg-gradient-to-br from-sky-100 to-sky-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-sky-800">wheelchair</h3><p class="text-sky-600 mt-2 text-sm">n.</p><p class="text-sky-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-sky-800">휠체어</h3><p class="text-sky-700 mt-2 text-sm">n.</p><hr class="my-2 border-sky-300" /><p class="text-sm text-sky-700">예문(영): The building has wide doors for wheelchair users.</p><p class="text-sm text-sky-600 mt-1">예문(한): 그 건물은 휠체어 사용자를 위한 넓은 문이 있다.</p></div>
-                </div>
-                <!-- wig -->
-                <div class="vocab-card bg-gradient-to-br from-amber-100 to-amber-200 p-6 rounded-xl card-hover cursor-pointer" onclick="flipCard(this)">
-                    <div class="front"><h3 class="text-xl font-bold text-amber-800">wig</h3><p class="text-amber-600 mt-2 text-sm">n.</p><p class="text-amber-500 text-sm mt-1">Click to see meaning</p></div>
-                    <div class="back hidden"><h3 class="text-xl font-bold text-amber-800">가발</h3><p class="text-amber-700 mt-2 text-sm">n.</p><hr class="my-2 border-amber-300" /><p class="text-sm text-amber-700">예문(영): We took a photo with colorful wigs.</p><p class="text-sm text-amber-600 mt-1">예문(한): 우리는 다양한 색깔의 가발을 쓰고 사진을 찍었다.</p></div>
-                </div>
-            </div>
-            <button id="completeVocabBtn" onclick="completeSection('vocabulary')" class="mt-6 bg-green-600 text-white px-8 py-3 rounded-lg font-medium transition-all opacity-50 cursor-not-allowed" disabled>✅ Complete Vocabulary (Flip all 16 cards first)</button>
-        </div>
-
-        <!-- ===== Questions Section ===== -->
-        <div id="questionsSection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8 hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">❓ Reading Comprehension</h2>
-            <div class="space-y-6">
-                <div class="question-item bg-blue-50 p-6 rounded-xl"><h3 class="font-semibold text-lg mb-3">1. How tall was the old man?</h3><textarea id="answer1" class="w-full p-3 border rounded-lg" rows="3" placeholder="Write your answer here..."></textarea><button onclick="saveAnswer(1)" class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Save Answer</button></div>
-                <div class="question-item bg-green-50 p-6 rounded-xl"><h3 class="font-semibold text-lg mb-3">2. What fell off the old man's head?</h3><textarea id="answer2" class="w-full p-3 border rounded-lg" rows="3" placeholder="Write your answer here..."></textarea><button onclick="saveAnswer(2)" class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Save Answer</button></div>
-                <div class="question-item bg-yellow-50 p-6 rounded-xl"><h3 class="font-semibold text-lg mb-3">3. What did Diego find next to the wheelchair?</h3><textarea id="answer3" class="w-full p-3 border rounded-lg" rows="3" placeholder="Write your answer here..."></textarea><button onclick="saveAnswer(3)" class="mt-3 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">Save Answer</button></div>
-                <div class="question-item bg-purple-50 p-6 rounded-xl"><h3 class="font-semibold text-lg mb-3">4. Why does Camila remember the old man clearly?</h3><textarea id="answer4" class="w-full p-3 border rounded-lg" rows="3" placeholder="Write your answer here..."></textarea><button onclick="saveAnswer(4)" class="mt-3 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Save Answer</button></div>
-            </div>
-            <button id="completeQuestionsBtn" onclick="completeSection('questions')" class="mt-6 bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-medium transition-all opacity-50 cursor-not-allowed" disabled>✅ Complete Questions (Answer all 4 questions first)</button>
-            <div id="sharedAnswersSection" class="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-blue-200 hidden">
-                <h3 class="text-xl font-bold text-blue-800 mb-4">👥 Class Answers Board</h3>
-                <p class="text-blue-700 mb-4">See what your classmates wrote:</p>
-                <div id="classAnswersDisplay" class="space-y-4"></div>
-                <div class="mt-4 text-center"><button onclick="shareMyAnswers()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">📤 Share My Answers with Class</button></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 25%"></div>
             </div>
         </div>
-
-        <!-- ===== Grammar Section ===== -->
-        <div id="grammarSection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8 hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">📝 Grammar Practice</h2>
-            <div class="space-y-8">
-                <div class="grammar-explanation bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-800">📚 There is / There are</h3>
-                    <div class="space-y-3 text-blue-700">
-                        <p><strong>There is</strong> + 단수 명사 (one thing)</p>
-                        <p class="ml-4">예: There <strong>is</strong> a wheelchair near the painting.</p>
-                        <p><strong>There are</strong> + 복수 명사 (two or more things)</p>
-                        <p class="ml-4">예: There <strong>are</strong> pieces of cake on the floor.</p>
+        
+        <div class="content">
+            <!-- Introduction Stage -->
+            <div class="stage active" id="stage-intro">
+                <div class="story-section">
+                    <h2>🎨 Fun Fact</h2>
+                    <p><strong>'Monalisa'</strong>는 콜롬비아 화가 Fernando Botero의 그림으로, Leonardo da Vinci의 'Mona Lisa'를 패러디한 작품이에요.</p>
+                </div>
+                
+                <div class="english-text" id="intro-text">
+                    <p><strong>Last Saturday, someone <span class="highlightable" data-word="threw">threw</span> a cake at the Monalisa in the Botero <span class="highlightable" data-word="museum">Museum</span> in Bogota, Colombia. There were four <span class="highlightable" data-word="eyewitness">eyewitnesses</span>. What did they say? Read the <span class="highlightable" data-word="following">following</span>, and find the <span class="highlightable" data-word="criminal">criminal</span>.</strong></p>
+                </div>
+                
+                <div class="vocabulary">
+                    <h3>📚 Key Vocabulary</h3>
+                    <div class="vocab-words">
+                        <span class="vocab-word" onclick="highlightWord('threw')">threw (던졌다)</span>
+                        <span class="vocab-word" onclick="highlightWord('eyewitness')">eyewitness (목격자)</span>
+                        <span class="vocab-word" onclick="highlightWord('criminal')">criminal (범인)</span>
+                        <span class="vocab-word" onclick="highlightWord('following')">following (다음의)</span>
+                        <span class="vocab-word" onclick="highlightWord('museum')">museum (박물관)</span>
                     </div>
                 </div>
-                <div class="grammar-exercise">
-                    <h3 class="text-xl font-semibold mb-4">There is / There are Practice</h3>
-                    <div class="question bg-gray-50 p-4 rounded-lg mb-4">
-                        <p class="mb-4">1. _____ four eyewitnesses in the museum.</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q1" value="There is" class="mr-3" /><span>There is</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q1" value="There are" class="mr-3" /><span>There are</span></label>
+                
+                <div class="question-section">
+                    <div class="question">
+                        <span class="question-number">Q0</span>
+                        Where did the incident happen? (사건이 어디서 일어났나요?)
+                    </div>
+                    <input type="text" class="answer-input" id="answer-intro" placeholder="영어로 답하세요">
+                    <div id="feedback-intro" class="feedback" style="display: none;"></div>
+                </div>
+                
+                <button class="submit-btn" onclick="checkIntroAnswer()" id="submit-intro">답안 확인하기</button>
+            </div>
+            
+            <!-- Stage 1: Ann Jones -->
+            <div class="stage" id="stage-1">
+                <div class="witness-card">
+                    <div class="witness-name">👩 Ann Jones</div>
+                    <div class="witness-role">a visitor (관람객)</div>
+                </div>
+                
+                <div class="english-text" id="ann-text">
+                    <p><em>"I was looking at the Monalisa, and someone threw a cake at the <span class="highlightable" data-word="painting">painting</span>. I <span class="highlightable" data-word="turned around">turned around</span> and saw an old man. He was standing <span class="highlightable" data-word="in front of">in front of</span> a <span class="highlightable" data-word="wheelchair">wheelchair</span>. I'm about 170 cm tall, and he was a little <span class="highlightable" data-word="taller">taller</span> than me."</em></p>
+                </div>
+                
+                <div class="vocabulary">
+                    <h3>📚 Key Vocabulary</h3>
+                    <div class="vocab-words">
+                        <span class="vocab-word" onclick="highlightWord('painting')">painting (그림)</span>
+                        <span class="vocab-word" onclick="highlightWord('turned around')">turned around (돌아봤다)</span>
+                        <span class="vocab-word" onclick="highlightWord('wheelchair')">wheelchair (휠체어)</span>
+                        <span class="vocab-word" onclick="highlightWord('taller')">taller (더 키가 큰)</span>
+                        <span class="vocab-word" onclick="highlightWord('in front of')">in front of (~앞에)</span>
+                    </div>
+                </div>
+                
+                <div class="questions-container">
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q1</span>
+                            What was Ann doing when the incident happened? (사건이 일어났을 때 Ann은 무엇을 하고 있었나요?)
                         </div>
-                        <button onclick="checkGrammar('q1','There are')" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Check Answer</button>
-                        <div id="q1-feedback" class="mt-2 hidden"></div>
+                        <input type="text" class="answer-input" id="answer-1-1" placeholder="영어로 답하세요">
+                        <div id="feedback-1-1" class="feedback" style="display: none;"></div>
                     </div>
-                    <div class="question bg-gray-50 p-4 rounded-lg mb-4">
-                        <p class="mb-4">2. _____ a cake box next to the wheelchair.</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q2" value="There is" class="mr-3" /><span>There is</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q2" value="There are" class="mr-3" /><span>There are</span></label>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q2</span>
+                            How tall was the old man compared to Ann? (그 노인은 Ann과 비교해서 키가 어땠나요?)
                         </div>
-                        <button onclick="checkGrammar('q2','There is')" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Check Answer</button>
-                        <div id="q2-feedback" class="mt-2 hidden"></div>
+                        <input type="text" class="answer-input" id="answer-1-2" placeholder="영어로 답하세요">
+                        <div id="feedback-1-2" class="feedback" style="display: none;"></div>
                     </div>
-                    <div class="question bg-gray-50 p-4 rounded-lg mb-4">
-                        <p class="mb-4">3. _____ many different cakes in the bakery.</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q3" value="There is" class="mr-3" /><span>There is</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q3" value="There are" class="mr-3" /><span>There are</span></label>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q3</span>
+                            Where was the old man standing? (그 노인은 어디에 서 있었나요?)
                         </div>
-                        <button onclick="checkGrammar('q3','There are')" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Check Answer</button>
-                        <div id="q3-feedback" class="mt-2 hidden"></div>
+                        <input type="text" class="answer-input" id="answer-1-3" placeholder="영어로 답하세요">
+                        <div id="feedback-1-3" class="feedback" style="display: none;"></div>
                     </div>
                 </div>
-                <!-- Comparative explanation -->
-                <div class="grammar-explanation bg-green-50 p-6 rounded-xl border-l-4 border-green-500">
-                    <h3 class="text-xl font-semibold mb-4 text-green-800">📚 Comparative (비교급)</h3>
-                    <div class="space-y-3 text-green-700">
-                        <p><strong>짧은 형용사</strong>: 형용사 + er + than</p>
-                        <p class="ml-4">예: tall → tall<strong>er</strong> than, fast → fast<strong>er</strong> than</p>
-                        <p><strong>긴 형용사</strong>: more + 형용사 + than</p>
-                        <p class="ml-4">예: beautiful → <strong>more</strong> beautiful than</p>
+                
+                <button class="submit-btn" onclick="checkStageAnswers(1)" id="submit-1">답안 확인하기</button>
+            </div>
+            
+            <!-- Stage 2: Carlos Diaz -->
+            <div class="stage" id="stage-2">
+                <div class="witness-card">
+                    <div class="witness-name">🧹 Carlos Diaz</div>
+                    <div class="witness-role">a janitor (청소부)</div>
+                </div>
+                
+                <div class="english-text" id="carlos-text">
+                    <p><em>"An old man with gray hair was <span class="highlightable" data-word="running away">running away</span>, and something <span class="highlightable" data-word="fell off">fell off</span> his head. It was his <span class="highlightable" data-word="wig">wig</span>. I ran after him, but I couldn't <span class="highlightable" data-word="catch">catch</span> him. He was faster than me. <span class="highlightable" data-word="in fact">In fact</span>, the old man was not old. He was a young man with long brown hair."</em></p>
+                </div>
+                
+                <div class="vocabulary">
+                    <h3>📚 Key Vocabulary</h3>
+                    <div class="vocab-words">
+                        <span class="vocab-word" onclick="highlightWord('running away')">running away (도망가는)</span>
+                        <span class="vocab-word" onclick="highlightWord('fell off')">fell off (떨어졌다)</span>
+                        <span class="vocab-word" onclick="highlightWord('wig')">wig (가발)</span>
+                        <span class="vocab-word" onclick="highlightWord('catch')">catch (잡다)</span>
+                        <span class="vocab-word" onclick="highlightWord('in fact')">in fact (사실은)</span>
                     </div>
                 </div>
-                <div class="grammar-exercise">
-                    <h3 class="text-xl font-semibold mb-4">Comparative Practice</h3>
-                    <div class="question bg-gray-50 p-4 rounded-lg mb-4">
-                        <p class="mb-4">4. He was _____ than me. (fast)</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q4" value="fast" class="mr-3" /><span>fast</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q4" value="faster" class="mr-3" /><span>faster</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q4" value="more fast" class="mr-3" /><span>more fast</span></label>
+                
+                <div class="questions-container">
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q4</span>
+                            What fell off the old man's head? (그 노인의 머리에서 무엇이 떨어졌나요?)
                         </div>
-                        <button onclick="checkGrammar('q4','faster')" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Check Answer</button>
-                        <div id="q4-feedback" class="mt-2 hidden"></div>
+                        <input type="text" class="answer-input" id="answer-2-1" placeholder="영어로 답하세요">
+                        <div id="feedback-2-1" class="feedback" style="display: none;"></div>
                     </div>
-                    <div class="question bg-gray-50 p-4 rounded-lg mb-4">
-                        <p class="mb-4">5. Ann is _____ than the suspect. (short)</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q5" value="short" class="mr-3" /><span>short</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q5" value="shorter" class="mr-3" /><span>shorter</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q5" value="more short" class="mr-3" /><span>more short</span></label>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q5</span>
+                            Why couldn't Carlos catch the man? (Carlos는 왜 그 남자를 잡을 수 없었나요?)
                         </div>
-                        <button onclick="checkGrammar('q5','shorter')" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Check Answer</button>
-                        <div id="q5-feedback" class="mt-2 hidden"></div>
+                        <input type="text" class="answer-input" id="answer-2-2" placeholder="영어로 답하세요">
+                        <div id="feedback-2-2" class="feedback" style="display: none;"></div>
                     </div>
-                    <div class="question bg-gray-50 p-4 rounded-lg mb-4">
-                        <p class="mb-4">6. The Monalisa is _____ than other paintings. (famous)</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q6" value="famous" class="mr-3" /><span>famous</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q6" value="famouser" class="mr-3" /><span>famouser</span></label>
-                            <label class="flex items-center cursor-pointer"><input type="radio" name="q6" value="more famous" class="mr-3" /><span>more famous</span></label>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q6</span>
+                            What color was the young man's real hair? (그 젊은 남자의 진짜 머리색은 무엇이었나요?)
                         </div>
-                        <button onclick="checkGrammar('q6','more famous')" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Check Answer</button>
-                        <div id="q6-feedback" class="mt-2 hidden"></div>
+                        <input type="text" class="answer-input" id="answer-2-3" placeholder="영어로 답하세요">
+                        <div id="feedback-2-3" class="feedback" style="display: none;"></div>
                     </div>
                 </div>
+                
+                <button class="submit-btn" onclick="checkStageAnswers(2)" id="submit-2">답안 확인하기</button>
             </div>
-            <button id="completeGrammarBtn" onclick="completeSection('grammar')" class="mt-6 bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium transition-all opacity-50 cursor-not-allowed" disabled>✅ Complete Grammar (Answer all 6 questions first)</button>
-        </div>
-
-        <!-- ===== Clues Section ===== -->
-        <div id="cluesSection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8 hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">🔍 Clue Collection Board</h2>
-            <div class="max-w-2xl mx-auto">
-                <h3 class="text-xl font-semibold mb-4 text-center">📝 My Written Clues</h3>
-                <div id="studentCluesDisplay" class="bg-indigo-50 p-6 rounded-lg min-h-64"><p class="text-indigo-500 italic text-center">Your written clues from the story will appear here...</p></div>
-                <div class="text-center mt-6"><button onclick="clearClues()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg">Clear All Clues</button></div>
-            </div>
-            <button onclick="completeSection('clues')" class="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all">✅ Complete Clue Collection</button>
-        </div>
-
-        <!-- ===== Sketch Section ===== -->
-        <div id="sketchSection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8 hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">🎨 Draw the Suspect</h2>
-            <div class="grid lg:grid-cols-4 gap-6">
-                <div class="lg:col-span-3">
-                    <div class="canvas-container"><canvas id="drawingCanvas" width="600" height="400" class="w-full"></canvas></div>
-                    <div class="flex justify-center gap-4 mt-4">
-                        <button onclick="clearCanvas()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Clear</button>
-                        <button onclick="saveSketch()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Save Sketch</button>
+            
+            <!-- Stage 3: Diego Perez -->
+            <div class="stage" id="stage-3">
+                <div class="witness-card">
+                    <div class="witness-name">👮 Diego Perez</div>
+                    <div class="witness-role">a guard (경비원)</div>
+                </div>
+                
+                <div class="english-text" id="diego-text">
+                    <p><em>"I went to the <span class="highlightable" data-word="crime scene">crime scene</span>, and there were <span class="highlightable" data-word="pieces">pieces</span> of cake <span class="highlightable" data-word="all over">all over</span> the painting. There was also a wheelchair near the painting, and I found a cake box <span class="highlightable" data-word="next to">next to</span> the wheelchair. The box was from Camila's <span class="highlightable" data-word="bakery">Bakery</span>."</em></p>
+                </div>
+                
+                <div class="vocabulary">
+                    <h3>📚 Key Vocabulary</h3>
+                    <div class="vocab-words">
+                        <span class="vocab-word" onclick="highlightWord('crime scene')">crime scene (범죄 현장)</span>
+                        <span class="vocab-word" onclick="highlightWord('pieces')">pieces (조각들)</span>
+                        <span class="vocab-word" onclick="highlightWord('all over')">all over (~전체에)</span>
+                        <span class="vocab-word" onclick="highlightWord('next to')">next to (~옆에)</span>
+                        <span class="vocab-word" onclick="highlightWord('bakery')">bakery (빵집)</span>
                     </div>
                 </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Color Palette</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="color-btn active" style="background:#000000" onclick="selectColor('#000000')"></div>
-                        <div class="color-btn" style="background:#8B4513" onclick="selectColor('#8B4513')"></div>
-                        <div class="color-btn" style="background:#FFE4B5" onclick="selectColor('#FFE4B5')"></div>
-                        <div class="color-btn" style="background:#0000FF" onclick="selectColor('#0000FF')"></div>
-                        <div class="color-btn" style="background:#808080" onclick="selectColor('#808080')"></div>
-                        <div class="color-btn" style="background:#FF0000" onclick="selectColor('#FF0000')"></div>
+                
+                <div class="questions-container">
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q7</span>
+                            What did Diego find all over the painting? (Diego는 그림 전체에서 무엇을 발견했나요?)
+                        </div>
+                        <input type="text" class="answer-input" id="answer-3-1" placeholder="영어로 답하세요">
+                        <div id="feedback-3-1" class="feedback" style="display: none;"></div>
                     </div>
-                    <h3 class="text-lg font-semibold mb-4 mt-6">Brush Size</h3>
-                    <input type="range" id="brushSize" min="1" max="20" value="5" class="w-full" />
-                    <p class="text-center mt-2">Size: <span id="brushSizeValue">5</span>px</p>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q8</span>
+                            What did Diego find next to the wheelchair? (Diego는 휠체어 옆에서 무엇을 발견했나요?)
+                        </div>
+                        <input type="text" class="answer-input" id="answer-3-2" placeholder="영어로 답하세요">
+                        <div id="feedback-3-2" class="feedback" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q9</span>
+                            Where was the cake box from? (케이크 상자는 어디서 온 것이었나요?)
+                        </div>
+                        <input type="text" class="answer-input" id="answer-3-3" placeholder="영어로 답하세요">
+                        <div id="feedback-3-3" class="feedback" style="display: none;"></div>
+                    </div>
                 </div>
+                
+                <button class="submit-btn" onclick="checkStageAnswers(3)" id="submit-3">답안 확인하기</button>
             </div>
-            <button onclick="completeSection('sketch')" class="mt-6 bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-lg font-medium transition-all">✅ Complete Sketch</button>
-            <div id="sharedSketchesSection" class="mt-8 bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-xl border-2 border-pink-200">
-                <h3 class="text-xl font-bold text-pink-800 mb-4">🎨 Class Sketch Gallery</h3>
-                <p class="text-pink-700 mb-4">See how your classmates drew the suspect:</p>
-                <div id="classSketchesDisplay" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"><div class="text-center text-pink-500 italic">Shared sketches will appear here...</div></div>
-                <div class="text-center"><button onclick="shareMySketch()" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg font-medium">🖼️ Share My Sketch with Class</button></div>
+            
+            <!-- Stage 4: Camila Santos -->
+            <div class="stage" id="stage-4">
+                <div class="witness-card">
+                    <div class="witness-name">🧁 Camila Santos</div>
+                    <div class="witness-role">the owner of Camila's Bakery (베이커리 사장)</div>
+                </div>
+                
+                <div class="english-text" id="camila-text">
+                    <p><em>"Last Friday, a young man <span class="highlightable" data-word="came in">came in</span>. I spoke to him in Spanish, but he didn't <span class="highlightable" data-word="understand">understand</span> me. He spoke only English. We had a lot of <span class="highlightable" data-word="different">different</span> cakes, but he just wanted the <span class="highlightable" data-word="smallest">smallest</span> one. We sold only one cake that day, so I remember him <span class="highlightable" data-word="clearly">clearly</span>. Oh, he had blue eyes."</em></p>
+                </div>
+                
+                <div class="vocabulary">
+                    <h3>📚 Key Vocabulary</h3>
+                    <div class="vocab-words">
+                        <span class="vocab-word" onclick="highlightWord('came in')">came in (들어왔다)</span>
+                        <span class="vocab-word" onclick="highlightWord('understand')">understand (이해하다)</span>
+                        <span class="vocab-word" onclick="highlightWord('different')">different (다른)</span>
+                        <span class="vocab-word" onclick="highlightWord('smallest')">smallest (가장 작은)</span>
+                        <span class="vocab-word" onclick="highlightWord('clearly')">clearly (명확히)</span>
+                    </div>
+                </div>
+                
+                <div class="questions-container">
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q10</span>
+                            What language did the young man speak? (그 젊은 남자는 어떤 언어를 말했나요?)
+                        </div>
+                        <input type="text" class="answer-input" id="answer-4-1" placeholder="영어로 답하세요">
+                        <div id="feedback-4-1" class="feedback" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q11</span>
+                            Why does Camila remember the man clearly? (Camila는 왜 그 남자를 명확히 기억하나요?)
+                        </div>
+                        <input type="text" class="answer-input" id="answer-4-2" placeholder="영어로 답하세요">
+                        <div id="feedback-4-2" class="feedback" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <div class="question">
+                            <span class="question-number">Q12</span>
+                            What color were the man's eyes? (그 남자의 눈은 무슨 색이었나요?)
+                        </div>
+                        <input type="text" class="answer-input" id="answer-4-3" placeholder="영어로 답하세요">
+                        <div id="feedback-4-3" class="feedback" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <div class="story-section" style="margin-top: 30px;">
+                    <h3>🤔 Think!</h3>
+                    <p><strong>Why did the man want the smallest cake? Can you guess?</strong></p>
+                    <p style="margin-top: 15px; font-style: italic; color: #6c757d;">
+                        💡 이 이야기는 2022년 5월, 한 남자가 파리의 루브르 박물관에서 Leonardo da Vinci의 'Mona Lisa' 그림을 케이크로 훼손한 실제 사건을 각색한 것입니다.
+                    </p>
+                </div>
+                
+                <button class="submit-btn" onclick="checkStageAnswers(4)" id="submit-4">답안 확인하기</button>
             </div>
-        </div>
-
-        <!-- ===== Solve Section ===== -->
-        <div id="solveSection" class="section bg-white rounded-2xl p-8 shadow-2xl card-hover mb-8 hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">🕵️ Solve the Mystery</h2>
-            <p class="text-lg mb-6">Now look at the information about the suspects. Who threw the cake at the Monalisa?</p>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="suspect-card border-2 border-gray-200 p-6 rounded-xl text-center" onclick="selectSuspect(this,'Andres Lozano')"><div class="text-6xl mb-4">👨‍💼</div><h3 class="font-bold text-lg">Andres Lozano</h3><div class="text-sm text-gray-600 mt-2 space-y-1"><p>Height: 176 cm</p><p>Hair: long, black</p><p>Languages: Spanish, English</p><p>Eyes: brown</p></div></div>
-                <div class="suspect-card border-2 border-gray-200 p-6 rounded-xl text-center" onclick="selectSuspect(this,'Larry Johnson')"><div class="text-6xl mb-4">👨‍🎨</div><h3 class="font-bold text-lg">Larry Johnson</h3><div class="text-sm text-gray-600 mt-2 space-y-1"><p>Height: 173 cm</p><p>Hair: long, brown</p><p>Languages: English</p><p>Eyes: blue</p></div></div>
-                <div class="suspect-card border-2 border-gray-200 p-6 rounded-xl text-center" onclick="selectSuspect(this,'Tim Baker')"><div class="text-6xl mb-4">👨‍🍳</div><h3 class="font-bold text-lg">Tim Baker</h3><div class="text-sm text-gray-600 mt-2 space-y-1"><p>Height: 182 cm</p><p>Hair: long, brown</p><p>Languages: English</p><p>Eyes: green</p></div></div>
-                <div class="suspect-card border-2 border-gray-200 p-6 rounded-xl text-center" onclick="selectSuspect(this,'Luca Ferez')"><div class="text-6xl mb-4">👨‍🦳</div><h3 class="font-bold text-lg">Luca Ferez</h3><div class="text-sm text-gray-600 mt-2 space-y-1"><p>Height: 166 cm</p><p>Hair: short, gray</p><p>Languages: Spanish</p><p>Eyes: blue</p></div></div>
+            
+            <!-- Stage 5: Find the Criminal -->
+            <div class="stage" id="stage-5">
+                <div class="story-section">
+                    <h2>🔍 Now, look at the information about the suspects.</h2>
+                    <p><strong>Who threw the cake at the Monalisa?</strong></p>
+                </div>
+                
+                <div class="suspects-container">
+                    <div class="suspect-card" onclick="selectSuspect('andres')">
+                        <div class="suspect-name">Andres Lozano</div>
+                        <div class="suspect-info">
+                            <p><strong>Height:</strong> 176 cm</p>
+                            <p><strong>Hair:</strong> long, black</p>
+                            <p><strong>Languages:</strong> Spanish, English</p>
+                            <p><strong>Eyes:</strong> brown</p>
+                        </div>
+                    </div>
+                    
+                    <div class="suspect-card" onclick="selectSuspect('larry')">
+                        <div class="suspect-name">Larry Johnson</div>
+                        <div class="suspect-info">
+                            <p><strong>Height:</strong> 173 cm</p>
+                            <p><strong>Hair:</strong> long, brown</p>
+                            <p><strong>Languages:</strong> English</p>
+                            <p><strong>Eyes:</strong> blue</p>
+                        </div>
+                    </div>
+                    
+                    <div class="suspect-card" onclick="selectSuspect('tim')">
+                        <div class="suspect-name">Tim Baker</div>
+                        <div class="suspect-info">
+                            <p><strong>Height:</strong> 182 cm</p>
+                            <p><strong>Hair:</strong> long, brown</p>
+                            <p><strong>Languages:</strong> English</p>
+                            <p><strong>Eyes:</strong> green</p>
+                        </div>
+                    </div>
+                    
+                    <div class="suspect-card" onclick="selectSuspect('luca')">
+                        <div class="suspect-name">Luca Ferez</div>
+                        <div class="suspect-info">
+                            <p><strong>Height:</strong> 166 cm</p>
+                            <p><strong>Hair:</strong> short, gray</p>
+                            <p><strong>Languages:</strong> Spanish</p>
+                            <p><strong>Eyes:</strong> blue</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-section">
+                    <div class="question">
+                        <span class="question-number">Final</span>
+                        범인을 선택하고, 그 이유를 영어로 설명하세요. (Choose the criminal and explain why in English.)
+                    </div>
+                    <div class="selected-suspect" id="selected-suspect" style="display: none;">
+                        <p>선택한 용의자: <span id="suspect-name"></span></p>
+                    </div>
+                    <textarea class="answer-input" id="criminal-reason" placeholder="Why do you think this person is the criminal? Explain in English..." rows="4"></textarea>
+                    <div id="feedback-criminal" class="feedback" style="display: none;"></div>
+                </div>
+                
+                <div class="vocabulary">
+                    <h3>📚 Key Vocabulary</h3>
+                    <div class="vocab-words">
+                        <span class="vocab-word">suspect (용의자)</span>
+                        <span class="vocab-word">height (키)</span>
+                        <span class="vocab-word">evidence (증거)</span>
+                        <span class="vocab-word">clue (단서)</span>
+                    </div>
+                </div>
+                
+                <button class="submit-btn" onclick="checkCriminal()" id="submit-criminal" disabled>범인 확정하기</button>
             </div>
-            <div class="bg-yellow-50 p-6 rounded-xl mb-6"><h3 class="font-semibold text-lg mb-3">Your Reasoning:</h3><textarea id="reasoning" class="w-full p-4 border rounded-lg" rows="4" placeholder="Explain why you chose this suspect based on the evidence..." oninput="checkMysteryCompletion()"></textarea></div>
-            <button id="completeMysteryBtn" onclick="completeMystery()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all opacity-50 cursor-not-allowed" disabled>✅ Complete Mystery (Select suspect & write reasoning first)</button>
-            <button id="revealBtn" onclick="revealTruth()" class="hidden bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all mt-4">🎯 Reveal the Truth!</button>
-            <div id="solution" class="hidden mt-6 p-6 bg-green-50 border-2 border-green-200 rounded-xl"><h3 class="text-2xl font-bold text-green-800 mb-4">🎉 Mystery Solved!</h3><p class="text-green-700 text-lg">The correct answer is <strong>Larry Johnson</strong>!</p><p class="text-green-600 mt-4">Based on the clues: young man with long brown hair, blue eyes, spoke only English, wore a gray wig as disguise, and bought a cake from Camila's Bakery. Larry Johnson matches all these characteristics perfectly!</p></div>
-            <!-- Class Solutions Section -->
-            <div id="classSolutionsSection" class="hidden mt-8 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-xl border-2 border-purple-200">
-                <h3 class="text-xl font-bold text-purple-800 mb-4">🕵️ Class Detective Board</h3>
-                <p class="text-purple-700 mb-4">See what suspects your classmates chose and their reasoning:</p>
-                <div id="classSolutionsDisplay" class="space-y-4 mb-4"><div class="text-center text-purple-500 italic">Complete your mystery solution to see classmates' answers...</div></div>
-                <div class="text-center"><button id="shareSolutionBtn" onclick="shareMySolution()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium hidden">🔍 Share My Solution with Class</button></div>
+            
+            <!-- Sharing Board Stage -->
+            <div class="stage" id="stage-sharing">
+                <div class="sharing-board">
+                    <h3>💬 학생들의 추론 공유 게시판</h3>
+                    <p style="color: #6c757d; margin-bottom: 20px;">다른 학생들의 추론을 보고 여러분의 생각도 공유해보세요!</p>
+                    
+                    <div class="student-response sample">
+                        <div class="student-name">👤 Student A <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">샘플</span></div>
+                        <div class="student-answer">"Larry Johnson is the criminal because he has blue eyes and speaks only English. His height (173cm) is a little taller than Ann (170cm). He also has long brown hair which matches Carlos's testimony."</div>
+                    </div>
+                    
+                    <div class="student-response sample">
+                        <div class="student-name">👤 Student B <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">샘플</span></div>
+                        <div class="student-answer">"I think it's Larry Johnson. The evidence shows: blue eyes (Camila saw), English only (couldn't understand Spanish), brown hair (Carlos found the wig), and he's taller than Ann but not too tall."</div>
+                    </div>
+                    
+                    <div class="student-response sample">
+                        <div class="student-name">👤 Student C <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">샘플</span></div>
+                        <div class="student-answer">"Larry Johnson is guilty! He bought the smallest cake because it was easier to throw and hide. All the witness descriptions match him perfectly."</div>
+                    </div>
+                    
+                    <div id="new-responses"></div>
+                    
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #dee2e6;">
+                        <h4 style="color: #17a2b8; margin-bottom: 10px;">✍️ 여러분의 추론을 공유해주세요!</h4>
+                        <input type="text" class="share-input" id="student-name-input" placeholder="이름을 입력하세요" maxlength="20">
+                        <textarea class="share-input" id="student-reasoning" placeholder="범인을 찾은 과정과 이유를 영어로 설명해주세요..." rows="3"></textarea>
+                        <button class="share-btn" onclick="shareReasoning()">공유하기 📤</button>
+                    </div>
+                </div>
+                
+                <button class="submit-btn" onclick="showFinalStage()" style="max-width: 300px; margin: 20px auto 0;">
+                    🎉 최종 결과 보기
+                </button>
+            </div>
+            
+            <!-- Final Stage: Success -->
+            <div class="stage final-stage" id="stage-final">
+                <div class="celebration">🎉🕵️‍♀️🎂</div>
+                <h2>Case Solved!</h2>
+                <div class="score-display">
+                    <h3>📊 최종 점수</h3>
+                    <p style="font-size: 1.5em; color: #28a745; font-weight: bold;">
+                        <span id="final-score">0</span> / 13 문제 정답
+                    </p>
+                    <p style="margin-top: 10px; color: #6c757d;">
+                        정답률: <span id="accuracy">0</span>%
+                    </p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 30px 0;">
+                    <h3 style="color: #495057; margin-bottom: 15px;">🔍 Case Summary</h3>
+                    <p style="text-align: left; line-height: 1.8;">
+                        범인은 <strong>긴 갈색 머리에 파란 눈을 가진 젊은 남자</strong>였습니다. 
+                        그는 회색 가발을 써서 노인으로 변장했고, 휠체어를 이용해 박물관에 들어갔어요. 
+                        영어만 할 수 있었고, 카밀라 베이커리에서 가장 작은 케이크를 샀습니다. 
+                        가장 작은 케이크를 산 이유는 던지기 쉽고 숨기기 쉬웠기 때문일 거예요!
+                    </p>
+                </div>
+                
+                <button class="submit-btn" onclick="restartGame()" style="max-width: 300px; margin: 0 auto;">
+                    🔄 다시 도전하기
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ===== Core Logic & Realtime ===== -->
-    <script>
-    // Game state
-    let gameState = {
-        completedSections: new Set(), collectedClues: [], studentClues: [], selectedSuspect: null, answers: {},
-        currentColor: '#000000', brushSize: 5, isDrawing: false, flippedCards: new Set(), grammarAnswers: new Set(),
-        sharedAnswers: [], sharedSketches: [], sharedSolutions: [], hasSharedAnswers: false, hasSharedSketch: false,
-        hasSharedSolution: false, firebaseConnected: false, roomId: null
-    };
-
-    // Firebase connection and room management
-    let firebaseInitialized = false;
-    function initializeFirebase(){
-        if (!window.firebaseDB){ setTimeout(initializeFirebase, 120); return; }
-        try{
-            // Use ?room=… from URL if present, else localStorage, else public
-            const params = new URLSearchParams(location.search);
-            const urlRoom = params.get('room');
-            gameState.roomId = urlRoom || localStorage.getItem('mysteryGameRoom') || 'public';
-            localStorage.setItem('mysteryGameRoom', gameState.roomId);
-
-            // Reflect auth status
-            gameState.firebaseConnected = !!window.firebaseUser;
-            updateFirebaseStatus();
-            setupFirebaseListeners();
-            firebaseInitialized = true;
-            console.log('Firebase initialized successfully with room:', gameState.roomId);
-        }catch(err){ console.error('Firebase initialization error:', err); updateFirebaseStatus(false); }
-    }
-        try{
-            gameState.roomId = localStorage.getItem('mysteryGameRoom') || generateRoomId();
-            localStorage.setItem('mysteryGameRoom', gameState.roomId);
-            gameState.firebaseConnected = true; updateFirebaseStatus(); setupFirebaseListeners(); firebaseInitialized = true;
-            console.log('Firebase initialized successfully with room:', gameState.roomId);
-        }catch(err){ console.error('Firebase initialization error:', err); updateFirebaseStatus(false); }
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js"></script>
+    <script src=""https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js"></script>
     
-    function generateRoomId(){ return 'room_' + Math.random().toString(36).slice(2,11); }
-    function updateFirebaseStatus(connected = gameState.firebaseConnected){ const el = document.getElementById('firebaseStatus'); if(!el) return; if(connected){ el.textContent = `🟢 Connected (Room: ${gameState.roomId})`; el.className = 'firebase-status firebase-connected'; } else { el.textContent = '🔴 Connection Failed'; el.className = 'firebase-status firebase-disconnected'; } }
-    function setupFirebaseListeners(){ if(!gameState.firebaseConnected) return; const answersRef = window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/answers`); window.firebaseOnValue(answersRef,(snap)=>{ const data=snap.val(); if(data){ gameState.sharedAnswers = Object.values(data).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)); displaySharedAnswers(); }}); const sketchesRef = window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/sketches`); window.firebaseOnValue(sketchesRef,(snap)=>{ const data=snap.val(); if(data){ gameState.sharedSketches = Object.values(data).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)); displaySharedSketches(); }}); const solutionsRef = window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/solutions`); window.firebaseOnValue(solutionsRef,(snap)=>{ const data=snap.val(); if(data){ gameState.sharedSolutions = Object.values(data).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)); displaySharedSolutions(); }}); }
-
-    // Initialize canvas & Firebase on load
-    let canvas, ctx;
-    window.onload = function(){
-        canvas = document.getElementById('drawingCanvas');
-        if (canvas){ ctx = canvas.getContext('2d'); ctx.lineCap='round'; ctx.lineJoin='round'; canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing); canvas.addEventListener('touchstart', handleTouch,{passive:false}); canvas.addEventListener('touchmove', handleTouch,{passive:false}); canvas.addEventListener('touchend', stopDrawing); const slider=document.getElementById('brushSize'); const sizeVal=document.getElementById('brushSizeValue'); if(slider&&sizeVal){ slider.addEventListener('input', function(){ gameState.brushSize=this.value; sizeVal.textContent=this.value; }); } }
-        showSection('story'); initializeFirebase();
-    };
-
-    // Navigation & progress
-    function showSection(sectionName){ document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden')); const el=document.getElementById(sectionName+'Section'); if(el){ el.classList.remove('hidden'); el.classList.add('fade-in'); } if (typeof event!=='undefined' && event.target){ document.querySelectorAll('.nav-btn').forEach(btn=>{ btn.classList.remove('bg-white','text-gray-800'); btn.classList.add('bg-white/20','text-white'); }); event.target.classList.remove('bg-white/20','text-white'); event.target.classList.add('bg-white','text-gray-800'); } }
-    function completeSection(sectionName){ gameState.completedSections.add(sectionName); updateProgress(); const btn=event?.target; const text=btn?.textContent; if(btn){ btn.textContent='✅ Completed!'; btn.classList.add('bg-green-600'); setTimeout(()=>{ btn.textContent=text; btn.classList.remove('bg-green-600'); }, 1500); }}
-    function updateProgress(){ const total=6; const done=gameState.completedSections.size; const pct=(done/total)*100; document.getElementById('progressBar').style.width=pct+'%'; document.getElementById('progressText').textContent=`${done}/${total}`; }
-
-    // Vocabulary
-    function flipCard(card){ const front=card.querySelector('.front'); const back=card.querySelector('.back'); const word=front.querySelector('h3').textContent; if(front.classList.contains('hidden')){ front.classList.remove('hidden'); back.classList.add('hidden'); } else { front.classList.add('hidden'); back.classList.remove('hidden'); gameState.flippedCards.add(word); checkVocabularyCompletion(); } }
-    function checkVocabularyCompletion(){ const total=16; const btn=document.getElementById('completeVocabBtn'); if(!btn) return; if(gameState.flippedCards.size>=total){ btn.disabled=false; btn.classList.remove('opacity-50','cursor-not-allowed'); btn.textContent='✅ Complete Vocabulary'; } else { btn.textContent=`✅ Complete Vocabulary (Flip all 16 cards first - ${gameState.flippedCards.size}/16)`; } }
-
-    // Grammar
-    function checkGrammar(questionId, correctAnswer){ const selected=document.querySelector(`input[name="${questionId}"]:checked`); const feedback=document.getElementById(`${questionId}-feedback`); if(!selected){ feedback.innerHTML='<p class="text-red-600">Please select an answer!</p>'; feedback.classList.remove('hidden'); return; } if(selected.value===correctAnswer){ feedback.innerHTML='<p class="text-green-600">✅ Correct! Well done!</p>'; gameState.grammarAnswers.add(questionId); } else { feedback.innerHTML=`<p class="text-red-600">❌ Incorrect. The correct answer is "${correctAnswer}".</p>`; } feedback.classList.remove('hidden'); checkGrammarCompletion(); }
-    function checkGrammarCompletion(){ const totalQuestions=6; const completeBtn=document.getElementById('completeGrammarBtn'); if(gameState.grammarAnswers.size>=totalQuestions){ completeBtn.disabled=false; completeBtn.classList.remove('opacity-50','cursor-not-allowed'); completeBtn.textContent='✅ Complete Grammar'; } else { completeBtn.textContent=`✅ Complete Grammar (Answer all 6 questions first - ${gameState.grammarAnswers.size}/6)`; } }
-
-    // Questions
-    function saveAnswer(questionNum){ const answer=document.getElementById(`answer${questionNum}`).value.trim(); if(answer===''){ alert('Please write an answer first!'); return; } gameState.answers[questionNum]=answer; const button=event.target; const originalText=button.textContent; button.textContent='✅ Saved!'; button.classList.add('bg-green-600'); setTimeout(()=>{ button.textContent=originalText; button.classList.remove('bg-green-600'); }, 1200); checkQuestionsCompletion(); }
-    function checkQuestionsCompletion(){ const totalQuestions=4; const completeBtn=document.getElementById('completeQuestionsBtn'); const answeredCount=Object.keys(gameState.answers).filter(key=> gameState.answers[key] && gameState.answers[key].trim()!=='').length; if(answeredCount>=totalQuestions){ completeBtn.disabled=false; completeBtn.classList.remove('opacity-50','cursor-not-allowed'); completeBtn.textContent='✅ Complete Questions'; document.getElementById('sharedAnswersSection').classList.remove('hidden'); } else { completeBtn.textContent=`✅ Complete Questions (Answer all 4 questions first - ${answeredCount}/4)`; } }
-
-    // Share Answers (Realtime)
-    function shareMyAnswers(){
-        if(gameState.hasSharedAnswers){ alert('You have already shared your answers!'); return; }
-        if (!window.firebaseUser) { alert('Connecting to Firebase… please try again in a moment.'); return; }
-        const studentName=prompt('Enter your name to share your answers:');
-        if(!studentName||studentName.trim()==='') return;
-        localStorage.setItem('userName', studentName.trim());
-        const myAnswers={ uid: window.firebaseUser.uid, name: studentName.trim(), answers:{...gameState.answers}, timestamp:new Date().toISOString(), displayTime:new Date().toLocaleTimeString() };
-        if(gameState.firebaseConnected){
-            const answersRef=window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/answers`);
-            const dup = (gameState.sharedAnswers||[]).some(a => a.uid === myAnswers.uid);
-            if (dup) { alert('You already shared your answers!'); return; }
-            window.firebasePush(answersRef, myAnswers);
-        } else {
-            gameState.sharedAnswers.unshift(myAnswers); displaySharedAnswers();
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFq-99bZSsy3h1qNy7irJZe7Z0OpZ9s4k",
+            authDomain: "st-grade-9e67f.firebaseapp.com",
+            databaseURL: "https://st-grade-9e67f-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "st-grade-9e67f",
+            storageBucket: "st-grade-9e67f.firebasestorage.app",
+            messagingSenderId: "481985157615",
+            appId: "1:481985157615:web:a40a8623938815ad283e1a"
+        };
+        
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const reasoningsRef = database.ref('student-reasonings');
+        
+        let currentStage = 0;
+        const totalStages = 5;
+        let correctAnswers = 0;
+        let stageScores = [0, 0, 0, 0, 0];
+        let selectedSuspect = null;
+        
+        const answers = {
+            1: {
+                1: ["looking at the monalisa", "looking at the painting", "she was looking at the monalisa", "watching the monalisa", "looking at monalisa"],
+                2: ["a little taller", "taller", "he was a little taller", "little taller than her", "little taller", "taller than ann"],
+                3: ["in front of a wheelchair", "standing in front of a wheelchair", "front of a wheelchair", "before a wheelchair", "front of wheelchair"]
+            },
+            2: {
+                1: ["wig", "his wig", "a wig", "the wig"],
+                2: ["he was faster", "faster than carlos", "he was faster than me", "the man was faster", "faster", "he was faster than carlos"],
+                3: ["brown", "long brown hair", "brown hair", "long brown", "long brown hair"]
+            },
+            3: {
+                1: ["pieces of cake", "cake pieces", "pieces", "cake", "pieces of cake"],
+                2: ["cake box", "a cake box", "box", "the cake box"],
+                3: ["camila's bakery", "camila bakery", "from camila's bakery", "camilas bakery", "camila's", "camila"]
+            },
+            4: {
+                1: ["english", "only english", "he spoke english", "spoke only english", "he spoke only english"],
+                2: ["they sold only one cake", "sold only one cake", "only one cake that day", "one cake", "sold only one cake that day"],
+                3: ["blue", "blue eyes", "his eyes were blue", "they were blue"]
+            }
+        };
+        
+        function highlightWord(word) {
+            // Remove previous highlights
+            document.querySelectorAll('.highlighted').forEach(el => {
+                el.classList.remove('highlighted');
+            });
+            
+            // Find and highlight the word
+            const highlightableElements = document.querySelectorAll('.highlightable');
+            highlightableElements.forEach(el => {
+                if (el.dataset.word === word) {
+                    el.classList.add('highlighted');
+                }
+            });
+            
+            // Remove highlight after 3 seconds
+            setTimeout(() => {
+                document.querySelectorAll('.highlighted').forEach(el => {
+                    el.classList.remove('highlighted');
+                });
+            }, 3000);
         }
-        gameState.hasSharedAnswers=true;
-        const button=event.target; button.textContent='✅ Shared with Class!'; button.disabled=true; button.classList.add('opacity-50');
-    } const studentName=prompt('Enter your name to share your answers:'); if(!studentName||studentName.trim()==='') return; localStorage.setItem('userName', studentName.trim()); const myAnswers={ name: studentName.trim(), answers:{...gameState.answers}, timestamp:new Date().toISOString(), displayTime:new Date().toLocaleTimeString() }; if(gameState.firebaseConnected){ const answersRef=window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/answers`); window.firebasePush(answersRef, myAnswers); } else { gameState.sharedAnswers.unshift(myAnswers); displaySharedAnswers(); } gameState.hasSharedAnswers=true; const button=event.target; button.textContent='✅ Shared with Class!'; button.disabled=true; button.classList.add('opacity-50'); 
-    function displaySharedAnswers(){ const display=document.getElementById('classAnswersDisplay'); const questions=['How tall was the old man?',"What fell off the old man's head?",'What did Diego find next to the wheelchair?','Why does Camila remember the old man clearly?']; if(gameState.sharedAnswers.length===0){ display.innerHTML='<p class="text-blue-500 italic">No answers shared yet... Be the first to share!</p>'; return; } display.innerHTML=gameState.sharedAnswers.map((student,index)=>{ const isUserAnswer=student.name===localStorage.getItem('userName'); return `<div class="bg-white p-4 rounded-lg border-2 ${isUserAnswer?'border-green-400 bg-green-50':'border-blue-200'} mb-3 ${index===0?'new-share-notification':''}"><h4 class="font-semibold ${isUserAnswer?'text-green-800':'text-blue-800'} mb-3">👤 ${student.name} ${isUserAnswer?'(Your Answers)':''} (${student.displayTime})</h4><div class="space-y-2">${questions.map((q,i)=>`<div class='text-sm bg-gray-50 p-2 rounded'><span class='font-medium text-gray-700'>Q${i+1}: ${q}</span><br><span class='text-gray-800 ml-2'>💬 ${student.answers[i+1]||'No answer'}</span></div>`).join('')}</div></div>`; }).join(''); }
-
-    // Clues
-    function clearClues(){ gameState.collectedClues=[]; gameState.studentClues=[]; updateStudentCluesDisplay(); updateStudentCluesList(); }
-    function addStudentClue(inputId){ const input=document.getElementById(inputId); const clueText=input.value.trim(); if(clueText===''){ alert('Please write a clue first!'); return; } if(!gameState.studentClues.includes(clueText)){ gameState.studentClues.push(clueText); updateStudentCluesList(); updateStudentCluesDisplay(); input.value=''; const button=event.target; const originalText=button.textContent; button.textContent='✅ Added!'; setTimeout(()=>{ button.textContent=originalText; }, 1200); } else { alert('This clue has already been added!'); } }
-    function addWitnessClue(inputId, witnessName){ const input=document.getElementById(inputId); const clueText=input.value.trim(); if(clueText===''){ alert('Please write a clue first!'); return; } const formattedClue=`${witnessName}: ${clueText}`; if(!gameState.studentClues.includes(formattedClue)){ gameState.studentClues.push(formattedClue); updateStudentCluesList(); updateStudentCluesDisplay(); input.value=''; const button=event.target; const originalText=button.textContent; button.textContent='✅ Added!'; setTimeout(()=>{ button.textContent=originalText; }, 1200); } else { alert('This clue has already been added!'); } }
-    function updateStudentCluesList(){ const list=document.getElementById('studentCluesList'); if(gameState.studentClues.length===0){ list.innerHTML='<p class="text-gray-500 italic">Your clues will appear here and in the Clues section...</p>'; } else { list.innerHTML=gameState.studentClues.map((clue,index)=>`<div class="bg-indigo-100 p-3 rounded-lg border-l-4 border-indigo-500"><span class="text-indigo-800">${clue}</span><button onclick="removeStudentClue(${index})" class="ml-2 text-red-600 hover:text-red-800 text-sm">✕</button></div>`).join(''); } }
-    function updateStudentCluesDisplay(){ const display=document.getElementById('studentCluesDisplay'); if(gameState.studentClues.length===0){ display.innerHTML='<p class="text-indigo-500 italic">Your written clues from the story will appear here...</p>'; } else { display.innerHTML=gameState.studentClues.map(clue=>`<div class="bg-white p-3 rounded-lg mb-2 border-l-4 border-indigo-500"><span class="text-indigo-800">📝 ${clue}</span></div>`).join(''); } }
-    function removeStudentClue(index){ gameState.studentClues.splice(index,1); updateStudentCluesList(); updateStudentCluesDisplay(); }
-
-    // Drawing
-    function selectColor(color){ gameState.currentColor=color; document.querySelectorAll('.color-btn').forEach(btn=>btn.classList.remove('active')); if(event?.target?.classList) event.target.classList.add('active'); }
-    function startDrawing(e){ gameState.isDrawing=true; const rect=canvas.getBoundingClientRect(); const x=e.clientX-rect.left; const y=e.clientY-rect.top; ctx.beginPath(); ctx.moveTo(x,y); }
-    function draw(e){ if(!gameState.isDrawing) return; const rect=canvas.getBoundingClientRect(); const x=e.clientX-rect.left; const y=e.clientY-rect.top; ctx.lineWidth=gameState.brushSize; ctx.strokeStyle=gameState.currentColor; ctx.lineTo(x,y); ctx.stroke(); }
-    function stopDrawing(){ gameState.isDrawing=false; }
-    function handleTouch(e){ e.preventDefault(); const touch=e.touches[0]; const mouseEvent=new MouseEvent(e.type==='touchstart'?'mousedown': e.type==='touchmove'?'mousemove':'mouseup',{ clientX:touch.clientX, clientY:touch.clientY}); canvas.dispatchEvent(mouseEvent); }
-    function clearCanvas(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
-    function saveSketch(){ const button=event.target; const originalText=button.textContent; button.textContent='✅ Saved!'; button.classList.add('bg-green-600'); setTimeout(()=>{ button.textContent=originalText; button.classList.remove('bg-green-600'); }, 1200); }
-
-    // Share sketches
-    function shareMySketch(){ if(gameState.hasSharedSketch){ alert('You have already shared your sketch!'); return; } const studentName=prompt('Enter your name to share your sketch:'); if(!studentName||studentName.trim()==='') return; localStorage.setItem('userName', studentName.trim()); const sketchData=canvas.toDataURL(); const mySketch={ uid: window.firebaseUser?.uid, name:studentName.trim(), sketch:sketchData, timestamp:new Date().toISOString(), displayTime:new Date().toLocaleTimeString() }; if(gameState.firebaseConnected){ const sketchesRef=window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/sketches`); window.firebasePush(sketchesRef, mySketch); } else { gameState.sharedSketches.unshift(mySketch); displaySharedSketches(); } gameState.hasSharedSketch=true; const button=event.target; const originalText=button.textContent; button.textContent='✅ Shared with Class!'; button.disabled=true; button.classList.add('opacity-50'); }
-    function displaySharedSketches(){ const display=document.getElementById('classSketchesDisplay'); if(gameState.sharedSketches.length===0){ display.innerHTML='<div class="text-center text-pink-500 italic">No sketches shared yet... Be the first to share!</div>'; return; } display.innerHTML=gameState.sharedSketches.map((student,index)=>{ const isUserSketch=student.name===localStorage.getItem('userName'); return `<div class="bg-white p-4 rounded-lg border-2 ${isUserSketch?'border-green-400 bg-green-50':'border-pink-200'} text-center ${index===0?'new-share-notification':''}"><h4 class="font-semibold ${isUserSketch?'text-green-800':'text-pink-800'} mb-2">👤 ${student.name} ${isUserSketch?'(Your Sketch)':''}</h4><div class="bg-gray-100 p-2 rounded mb-2 border-2 border-gray-300"><img src='${student.sketch}' alt='${student.name}\'s sketch' class='w-full h-32 object-contain rounded'></div><p class="text-sm ${isUserSketch?'text-green-600':'text-pink-600'}">${student.displayTime}</p></div>`; }).join(''); }
-
-    // Solve
-    function selectSuspect(card, suspectName){ document.querySelectorAll('.suspect-card').forEach(c=>c.classList.remove('selected')); card.classList.add('selected'); gameState.selectedSuspect=suspectName; checkMysteryCompletion(); }
-    function checkMysteryCompletion(){ const reasoning=document.getElementById('reasoning').value.trim(); const completeMysteryBtn=document.getElementById('completeMysteryBtn'); if(gameState.selectedSuspect && reasoning.length>0){ completeMysteryBtn.disabled=false; completeMysteryBtn.classList.remove('opacity-50','cursor-not-allowed'); completeMysteryBtn.textContent='✅ Complete Mystery'; } else { completeMysteryBtn.disabled=true; completeMysteryBtn.classList.add('opacity-50','cursor-not-allowed'); completeMysteryBtn.textContent='✅ Complete Mystery (Select suspect & write reasoning first)'; } }
-    function completeMystery(){ if(!gameState.selectedSuspect || !document.getElementById('reasoning').value.trim()){ alert('Please select a suspect and write your reasoning first!'); return; } completeSection('solve'); document.getElementById('revealBtn').classList.remove('hidden'); document.getElementById('classSolutionsSection').classList.remove('hidden'); document.getElementById('shareSolutionBtn').classList.remove('hidden'); document.getElementById('completeMysteryBtn').style.display='none'; }
-    function revealTruth(){ document.getElementById('solution').classList.remove('hidden'); document.getElementById('solution').scrollIntoView({behavior:'smooth'}); document.getElementById('revealBtn').style.display='none'; }
-
-    // Share Solutions & grouped view
-    function shareMySolution(){ if(gameState.hasSharedSolution){ alert('You have already shared your solution!'); return; } const studentName=prompt('Enter your name to share your solution:'); if(!studentName||studentName.trim()==='') return; localStorage.setItem('userName', studentName.trim()); const mySolution={ uid: window.firebaseUser?.uid, name:studentName.trim(), suspect:gameState.selectedSuspect, reasoning:document.getElementById('reasoning').value.trim(), timestamp:new Date().toISOString(), displayTime:new Date().toLocaleTimeString() }; if(gameState.firebaseConnected){ const solutionsRef=window.firebaseRef(window.firebaseDB, `rooms/${gameState.roomId}/solutions`); window.firebasePush(solutionsRef, mySolution); } else { gameState.sharedSolutions.unshift(mySolution); displaySharedSolutions(); } gameState.hasSharedSolution=true; const button=event.target; const originalText=button.textContent; button.textContent='✅ Shared with Class!'; button.disabled=true; button.classList.add('opacity-50'); }
-    function displaySharedSolutions(){ const display=document.getElementById('classSolutionsDisplay'); if(gameState.sharedSolutions.length===0){ display.innerHTML='<div class="text-center text-purple-500 italic">No solutions shared yet... Complete your mystery to share!</div>'; return; }
-        // Group solutions by suspect
-        const groupedSolutions = {}; gameState.sharedSolutions.forEach(solution => { if (!groupedSolutions[solution.suspect]) groupedSolutions[solution.suspect] = []; groupedSolutions[solution.suspect].push(solution); });
-        display.innerHTML = Object.keys(groupedSolutions).map(suspect => `
-                <div class="bg-white p-4 rounded-lg border-2 border-purple-300 mb-4">
-                    <h4 class="font-bold text-purple-800 mb-3 text-lg">🕵️ Students who chose: ${suspect}</h4>
-                    <div class="space-y-3">
-                        ${groupedSolutions[suspect].map((solution, index) => {
-                            const isUserSolution = solution.name === localStorage.getItem('userName');
-                            return `
-                            <div class="p-3 rounded border-l-4 ${isUserSolution ? 'bg-green-50 border-green-400' : 'bg-purple-50 border-purple-400'} ${index === 0 ? 'new-share-notification' : ''}">
-                                <div class="flex justify-between items-start mb-2">
-                                    <span class="font-semibold ${isUserSolution ? 'text-green-700' : 'text-purple-700'}">👤 ${solution.name} ${isUserSolution ? '(Your Solution)' : ''}</span>
-                                    <span class="text-sm ${isUserSolution ? 'text-green-600' : 'text-purple-600'}">${solution.displayTime}</span>
-                                </div>
-                                <p class="${isUserSolution ? 'text-green-800' : 'text-purple-800'} text-sm font-medium">💭 ${solution.reasoning}</p>
-                            </div>
-                        `}).join('')}
-                    </div>
-                </div>
-            `).join('');
-    }
+        
+        function checkIntroAnswer() {
+            const input = document.getElementById('answer-intro');
+            const feedback = document.getElementById('feedback-intro');
+            const userAnswer = input.value.toLowerCase().trim();
+            
+            const correctAnswers = ["botero museum", "the botero museum", "museum", "botero museum in bogota", "in the botero museum"];
+            
+            let isCorrect = false;
+            for (let correctAnswer of correctAnswers) {
+                if (userAnswer === correctAnswer.toLowerCase() || 
+                    (userAnswer.length > 3 && correctAnswer.toLowerCase().includes(userAnswer)) ||
+                    (correctAnswer.length > 3 && userAnswer.includes(correctAnswer.toLowerCase()))) {
+                    isCorrect = true;
+                    break;
+                }
+            }
+            
+            feedback.style.display = 'block';
+            
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '✅ 정답입니다! 이제 목격자들의 증언을 들어보세요.';
+                input.style.borderColor = '#28a745';
+                
+                document.getElementById('submit-intro').disabled = true;
+                document.getElementById('submit-intro').innerHTML = '정답! 다음 단계로 이동 중...';
+                
+                setTimeout(() => {
+                    nextStage();
+                }, 2000);
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '❌ 다시 생각해보세요. 지문을 자세히 읽어보세요!';
+                input.style.borderColor = '#dc3545';
+            }
+        }
+        
+        function nextStage() {
+            if (currentStage === 0) {
+                document.getElementById('stage-intro').classList.remove('active');
+                currentStage = 1;
+                document.getElementById('stage-1').classList.add('active');
+                updateProgress();
+            }
+        }
+        
+        function checkStageAnswers(stage) {
+            let stageCorrect = 0;
+            let allCorrect = true;
+            
+            for (let q = 1; q <= 3; q++) {
+                const input = document.getElementById(`answer-${stage}-${q}`);
+                const feedback = document.getElementById(`feedback-${stage}-${q}`);
+                const userAnswer = input.value.toLowerCase().trim();
+                
+                let isCorrect = false;
+                
+                if (answers[stage] && answers[stage][q]) {
+                    for (let correctAnswer of answers[stage][q]) {
+                        if (userAnswer === correctAnswer.toLowerCase() || 
+                            (userAnswer.length > 3 && correctAnswer.toLowerCase().includes(userAnswer)) ||
+                            (correctAnswer.length > 3 && userAnswer.includes(correctAnswer.toLowerCase()))) {
+                            isCorrect = true;
+                            break;
+                        }
+                    }
+                }
+                
+                feedback.style.display = 'block';
+                
+                if (isCorrect) {
+                    feedback.className = 'feedback correct';
+                    feedback.innerHTML = '✅ 정답입니다!';
+                    stageCorrect++;
+                    input.style.borderColor = '#28a745';
+                } else {
+                    feedback.className = 'feedback incorrect';
+                    feedback.innerHTML = '❌ 다시 생각해보세요. 지문을 자세히 읽어보세요!';
+                    input.style.borderColor = '#dc3545';
+                    allCorrect = false;
+                }
+            }
+            
+            stageScores[stage - 1] = stageCorrect;
+            correctAnswers = stageScores.reduce((a, b) => a + b, 0);
+            
+            // Only proceed if all answers are correct
+            if (allCorrect) {
+                document.getElementById(`submit-${stage}`).disabled = true;
+                document.getElementById(`submit-${stage}`).innerHTML = `3/3 정답! 다음 단계로 이동 중...`;
+                
+                setTimeout(() => {
+                    if (stage < 4) {
+                        moveToNextStage(stage);
+                    } else {
+                        moveToSuspectStage();
+                    }
+                }, 2000);
+            } else {
+                document.getElementById(`submit-${stage}`).innerHTML = `${stageCorrect}/3 정답 - 모든 문제를 맞혀야 합니다!`;
+                
+                // Re-enable button after 3 seconds
+                setTimeout(() => {
+                    document.getElementById(`submit-${stage}`).innerHTML = '답안 확인하기';
+                }, 3000);
+            }
+        }
+        
+        function moveToNextStage(currentStageNum) {
+            document.getElementById(`stage-${currentStageNum}`).classList.remove('active');
+            currentStage = currentStageNum + 1;
+            document.getElementById(`stage-${currentStage}`).classList.add('active');
+            updateProgress();
+        }
+        
+        function moveToSuspectStage() {
+            document.getElementById('stage-4').classList.remove('active');
+            currentStage = 5;
+            document.getElementById('stage-5').classList.add('active');
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            document.getElementById('current-stage').textContent = currentStage === 5 ? '범인찾기' : currentStage;
+            const progress = (currentStage / totalStages) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+        
+        function selectSuspect(suspect) {
+            // Remove previous selection
+            document.querySelectorAll('.suspect-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            event.target.closest('.suspect-card').classList.add('selected');
+            
+            selectedSuspect = suspect;
+            
+            // Show selected suspect info
+            const suspectNames = {
+                'andres': 'Andres Lozano',
+                'larry': 'Larry Johnson', 
+                'tim': 'Tim Baker',
+                'luca': 'Luca Ferez'
+            };
+            
+            document.getElementById('selected-suspect').style.display = 'block';
+            document.getElementById('suspect-name').textContent = suspectNames[suspect];
+            
+            // Enable submit button
+            document.getElementById('submit-criminal').disabled = false;
+        }
+        
+        function checkCriminal() {
+            const reasonInput = document.getElementById('criminal-reason');
+            const feedback = document.getElementById('feedback-criminal');
+            const reason = reasonInput.value.toLowerCase().trim();
+            
+            feedback.style.display = 'block';
+            
+            // Check if Larry Johnson is selected (correct answer)
+            if (selectedSuspect === 'larry') {
+                // Check if reason mentions key evidence
+                const hasValidReason = reason.includes('blue eyes') || 
+                                     reason.includes('english') || 
+                                     reason.includes('brown hair') || 
+                                     reason.includes('173') ||
+                                     reason.includes('height') ||
+                                     reason.includes('tall');
+                
+                if (hasValidReason && reason.length > 10) {
+                    feedback.className = 'feedback correct';
+                    feedback.innerHTML = '🎉 정답입니다! Larry Johnson이 범인이 맞습니다!';
+                    stageScores[4] = 1;
+                    correctAnswers = stageScores.reduce((a, b) => a + b, 0);
+                    
+                    document.getElementById('submit-criminal').disabled = true;
+                    document.getElementById('submit-criminal').innerHTML = '범인을 찾았습니다! 공유 게시판으로 이동 중...';
+                    
+                    setTimeout(() => {
+                        showSharingBoard();
+                    }, 3000);
+                } else {
+                    feedback.className = 'feedback incorrect';
+                    feedback.innerHTML = '❌ 올바른 용의자를 선택했지만, 증거를 바탕으로 더 자세한 이유를 영어로 설명해주세요!';
+                }
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '❌ 틀렸습니다! 목격자들의 증언을 다시 확인해보세요. 키, 머리색, 눈색, 언어 등을 고려해보세요.';
+            }
+        }
+        
+        function showSharingBoard() {
+            document.getElementById('stage-5').classList.remove('active');
+            document.getElementById('stage-sharing').classList.add('active');
+            
+            // Update progress
+            document.getElementById('current-stage').textContent = '공유';
+            document.getElementById('progress-fill').style.width = '90%';
+            
+            // Firebase에서 실시간으로 학생 추론 불러오기
+            loadStudentReasonings();
+        }
+        
+        function loadStudentReasonings() {
+            // 기존 샘플 데이터 제거
+            const existingResponses = document.querySelectorAll('.student-response');
+            existingResponses.forEach(response => {
+                if (!response.classList.contains('sample')) {
+                    response.remove();
+                }
+            });
+            
+            // Firebase에서 실시간 데이터 리스닝
+            reasoningsRef.orderByChild('timestamp').on('value', (snapshot) => {
+                const newResponsesContainer = document.getElementById('new-responses');
+                newResponsesContainer.innerHTML = ''; // 기존 데이터 클리어
+                
+                if (snapshot.exists()) {
+                    const reasonings = [];
+                    snapshot.forEach((childSnapshot) => {
+                        reasonings.push({
+                            id: childSnapshot.key,
+                            ...childSnapshot.val()
+                        });
+                    });
+                    
+                    // 최신 순으로 정렬
+                    reasonings.sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    // 각 추론을 화면에 표시
+                    reasonings.forEach((reasoning) => {
+                        const responseElement = document.createElement('div');
+                        responseElement.className = 'student-response';
+                        responseElement.style.animation = 'fadeIn 0.5s ease-in';
+                        
+                        const timeAgo = getTimeAgo(reasoning.timestamp);
+                        
+                        responseElement.innerHTML = `
+                            <div class="student-name">👤 ${reasoning.name} <span style="color: #6c757d; font-size: 0.8em; font-weight: normal;">${timeAgo}</span></div>
+                            <div class="student-answer">"${reasoning.reasoning}"</div>
+                        `;
+                        
+                        newResponsesContainer.appendChild(responseElement);
+                    });
+                }
+            });
+        }
+        
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (minutes < 1) return '방금 전';
+            if (minutes < 60) return `${minutes}분 전`;
+            if (hours < 24) return `${hours}시간 전`;
+            return `${days}일 전`;
+        }
+        
+        function shareReasoning() {
+            const nameInput = document.getElementById('student-name-input');
+            const reasoningInput = document.getElementById('student-reasoning');
+            const shareBtn = document.querySelector('.share-btn');
+            const name = nameInput.value.trim();
+            const reasoning = reasoningInput.value.trim();
+            
+            if (name && reasoning && reasoning.length > 10) {
+                // 버튼 비활성화 및 로딩 표시
+                shareBtn.disabled = true;
+                shareBtn.innerHTML = '공유 중... ⏳';
+                
+                // Firebase에 데이터 저장
+                const newReasoningRef = reasoningsRef.push();
+                const reasoningData = {
+                    name: name,
+                    reasoning: reasoning,
+                    timestamp: Date.now(),
+                    suspect: selectedSuspect || 'unknown'
+                };
+                
+                newReasoningRef.set(reasoningData)
+                    .then(() => {
+                        // 성공 시
+                        nameInput.value = '';
+                        reasoningInput.value = '';
+                        
+                        // 성공 메시지 표시
+                        showSuccessMessage('추론이 성공적으로 공유되었습니다! 🎉');
+                        
+                        // 버튼 복원
+                        shareBtn.disabled = false;
+                        shareBtn.innerHTML = '공유하기 📤';
+                    })
+                    .catch((error) => {
+                        // 오류 시
+                        console.error('Error sharing reasoning:', error);
+                        showErrorMessage('공유 중 오류가 발생했습니다. 다시 시도해주세요.');
+                        
+                        // 버튼 복원
+                        shareBtn.disabled = false;
+                        shareBtn.innerHTML = '공유하기 📤';
+                    });
+            } else {
+                showErrorMessage('이름과 추론 내용을 모두 입력해주세요. (추론은 10자 이상)');
+            }
+        }
+        
+        function showSuccessMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #d4edda;
+                color: #155724;
+                padding: 15px 20px;
+                border-radius: 8px;
+                border: 1px solid #c3e6cb;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            messageDiv.innerHTML = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+        
+        function showErrorMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f8d7da;
+                color: #721c24;
+                padding: 15px 20px;
+                border-radius: 8px;
+                border: 1px solid #f5c6cb;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            messageDiv.innerHTML = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+        
+        function showFinalStage() {
+            document.getElementById('stage-sharing').classList.remove('active');
+            document.getElementById('stage-final').classList.add('active');
+            
+            // Update final score (12 questions + 1 criminal identification)
+            const totalScore = correctAnswers + (stageScores[4] || 0);
+            document.getElementById('final-score').textContent = totalScore;
+            const accuracy = Math.round((totalScore / 13) * 100);
+            document.getElementById('accuracy').textContent = accuracy;
+            
+            // Update progress to 100%
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('current-stage').textContent = '완료';
+        }
+        
+        function restartGame() {
+            // Reset all variables
+            currentStage = 0;
+            correctAnswers = 0;
+            stageScores = [0, 0, 0, 0, 0];
+            selectedSuspect = null;
+            
+            // Reset all stages
+            document.querySelectorAll('.stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+            
+            // Reset inputs and feedbacks
+            document.querySelectorAll('.answer-input').forEach(input => {
+                input.value = '';
+                input.style.borderColor = '#dee2e6';
+            });
+            
+            document.querySelectorAll('.feedback').forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+            
+            // Reset suspect cards
+            document.querySelectorAll('.suspect-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            document.getElementById('selected-suspect').style.display = 'none';
+            
+            // Clear shared responses
+            document.getElementById('new-responses').innerHTML = '';
+            
+            // Firebase 리스너 해제
+            if (reasoningsRef) {
+                reasoningsRef.off();
+            }
+            
+            // Reset submit buttons
+            const introBtn = document.getElementById('submit-intro');
+            if (introBtn) {
+                introBtn.disabled = false;
+                introBtn.innerHTML = '답안 확인하기';
+            }
+            
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`submit-${i}`);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '답안 확인하기';
+                }
+            }
+            
+            // Reset criminal submit button
+            const criminalBtn = document.getElementById('submit-criminal');
+            if (criminalBtn) {
+                criminalBtn.disabled = true;
+                criminalBtn.innerHTML = '범인 확정하기';
+            }
+            
+            // Reset to intro stage
+            document.getElementById('stage-intro').classList.add('active');
+            document.getElementById('current-stage').textContent = '1';
+            document.getElementById('progress-fill').style.width = '20%';
+        }
+        
+        // Add enter key support for inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.answer-input').forEach((input) => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        // Find which stage this input belongs to
+                        const inputId = input.id;
+                        const stageMatch = inputId.match(/answer-(\d+)-\d+/);
+                        if (stageMatch) {
+                            const stage = parseInt(stageMatch[1]);
+                            const submitBtn = document.getElementById(`submit-${stage}`);
+                            if (submitBtn && !submitBtn.disabled) {
+                                checkStageAnswers(stage);
+                            }
+                        }
+                    }
+                });
+            });
+        });
     </script>
-
-    <!-- Removed stray Cloudflare challenge script injected by some hosts -->
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97ced57cf3f03121',t:'MTc1NzUwNjM1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
