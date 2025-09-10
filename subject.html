@@ -459,6 +459,13 @@
     </style>
 </head>
 <body>
+        <!-- 🔑 로그인/로그아웃 버튼 UI (공유 게시판 위 등 원하는 위치에 추가) -->
+    <div id="auth-buttons" style="text-align:right; margin: 10px;">
+      <button id="login-btn" onclick="signInWithGoogle()">구글 로그인</button>
+      <button id="logout-btn" onclick="signOut()" style="display:none;">로그아웃</button>
+      <span id="user-info" style="margin-left:10px; color:#1976d2;"></span>
+    </div>
+
     <div class="game-container">
         <div class="header">
             <h1>🕵️ Who Threw a Cake at the Monalisa? 🎂</h1>
@@ -874,6 +881,9 @@
     <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-database-compat.js"></script>
+         <!-- 🔑 Firebase Auth SDK 추가 -->
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+    
     
     <script>
         // Firebase 설정
@@ -891,6 +901,40 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const reasoningsRef = database.ref('student-reasonings');
+
+                // 🔑 구글 로그인 함수
+        function signInWithGoogle() {
+          var provider = new firebase.auth.GoogleAuthProvider();
+          firebase.auth().signInWithPopup(provider)
+            .catch(function(error) {
+              alert("로그인 오류: " + error.message);
+            });
+        }
+        // 🔑 로그아웃 함수
+        function signOut() {
+          firebase.auth().signOut();
+        }
+        // 🔑 로그인 상태 변화 시 UI/공유버튼 처리
+        firebase.auth().onAuthStateChanged(function(user) {
+          const loginBtn = document.getElementById('login-btn');
+          const logoutBtn = document.getElementById('logout-btn');
+          const userInfo = document.getElementById('user-info');
+          if (user) {
+            loginBtn.style.display = "none";
+            logoutBtn.style.display = "";
+            userInfo.textContent = user.displayName + "님";
+            document.querySelectorAll('.share-btn').forEach(btn => btn.disabled = false);
+          } else {
+            loginBtn.style.display = "";
+            logoutBtn.style.display = "none";
+            userInfo.textContent = "";
+            document.querySelectorAll('.share-btn').forEach(btn => btn.disabled = true);
+          }
+        });
+        // 🔑 최초 로딩 시 공유버튼 비활성화
+        document.addEventListener('DOMContentLoaded', function() {
+          document.querySelectorAll('.share-btn').forEach(btn => btn.disabled = true);
+        });
         
         let currentStage = 0;
         const totalStages = 5;
